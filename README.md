@@ -12,7 +12,7 @@ A modern, professional desktop application built with Python (**Tkinter**, **Pan
   - **Advanced Entities**: Top 10 Entities ranked by highest Positive and highest Negative sentiment percentages
   - **Word Frequencies**: Top 10 most common words occurring in Positive vs. Negative tweets (excluding standard stop words)
   - **Sentiment Heatmap**: Sentiment density mapped across the top 15 entities and a 100% proportional stacked bar chart
-- **Data Preprocessing Pipeline**: Automatically drops null values, computes tweet lengths, calculates percentage splits, and cleans basic text structures.
+- **Extensive Data Preprocessing**: A robust pipeline that performs regex-based cleaning, URL/special character removal, text normalization (lowercasing), and automatic duplicate detection to ensure high-quality insights.
 
 ## Installation & Setup
 

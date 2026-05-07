@@ -1,4 +1,5 @@
 import os
+import re
 import tkinter as tk
 from tkinter import ttk, messagebox
 import pandas as pd
@@ -86,31 +87,45 @@ class ModernDashboard(tk.Tk):
 
     def load_and_preprocess_data(self):
         try:
-            # Load Data
+            # 1. Load Data
             self.df = pd.read_csv(self.dataset_path, header=None, names=['tweet_id', 'entity', 'sentiment', 'tweet_text'])
+            total_initial = len(self.df)
             
-            # Basic info
-            total_records_initial = len(self.df)
-            
-            # Handle Missing Values
+            # 2. Drop Missing Values
             missing_text = self.df['tweet_text'].isnull().sum()
             self.df.dropna(subset=['tweet_text'], inplace=True)
             
-            # Clean text (basic)
-            self.df['tweet_text'] = self.df['tweet_text'].astype(str)
+            # 3. Text Normalization & Cleaning (Extensive)
+            def clean_text(text):
+                text = str(text).lower()  # Lowercase
+                text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)  # Remove URLs
+                text = re.sub(r'[^a-z0-9\s]', '', text)  # Remove special characters
+                text = re.sub(r'\s+', ' ', text).strip()  # Remove extra whitespace
+                return text
+
+            self.df['tweet_text'] = self.df['tweet_text'].apply(clean_text)
+            
+            # 4. Remove Empty/Short Tweets after cleaning
+            self.df = self.df[self.df['tweet_text'].str.len() > 3]
+            
+            # 5. Remove Duplicates (Common in Twitter datasets)
+            duplicates = self.df.duplicated(subset=['tweet_text']).sum()
+            self.df.drop_duplicates(subset=['tweet_text'], inplace=True)
+            
+            # 6. Feature Engineering
             self.df['tweet_length'] = self.df['tweet_text'].apply(len)
             
-            # Calculate stats
+            # 7. Update Stats for Sidebar
             self.stats = {
-                "Total Initial Records": f"{total_records_initial:,}",
-                "Missing Text Dropped": f"{missing_text:,}",
-                "Clean Records": f"{len(self.df):,}",
+                "Initial Records": f"{total_initial:,}",
+                "Nulls Removed": f"{missing_text:,}",
+                "Duplicates Removed": f"{duplicates:,}",
+                "Final Clean Dataset": f"{len(self.df):,}",
                 "Unique Entities": f"{self.df['entity'].nunique()}",
-                "Avg Tweet Length": f"{self.df['tweet_length'].mean():.1f} chars",
-                "Sentiments": ", ".join(self.df['sentiment'].unique())
+                "Avg Tweet Length": f"{self.df['tweet_length'].mean():.1f} chars"
             }
         except Exception as e:
-            messagebox.showerror("Data Error", f"Failed to load data: {e}")
+            messagebox.showerror("Data Error", f"Extensive Preprocessing Failed: {e}")
             self.destroy()
 
     def update_stats_panel(self):
